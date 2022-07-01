@@ -1,0 +1,262 @@
+﻿@page "/"
+
+@using AMRControl.Data
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@inject AmrTasksService TasksService
+@inject IJSRuntime _jsRuntime
+
+<PageTitle>AMR-Control</PageTitle>
+
+<h1>AMR controller</h1>
+<br />
+<div class="row">
+    <div class = "col-6">
+        <div class="row">
+            <div class="col-12">
+                <div class="card text-bg-primary" id="choose-and-start-task">
+                  <div class="card-body text-center">
+                      <a href="#" class="btn" id="btn-choose-and-start-task" data-bs-toggle="modal" data-bs-target="#generalModal" style="border: none;">
+                        <h2 class="card-title">Choose and start task</h2>
+                        <p class="card-text">Click here to choose a task and call the AMR to the tool-dispenser.</p>
+                    </a>
+                  </div>
+            </div>
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-12">
+                <div class="card text-bg-light" id="tool-dispensing-finished">
+                  <div class="card-body text-center">
+                      <a href="#" class="btn disabled" id="btn-tool-dispensing-finished" style="border: none;" @onclick="()=>HandleDispensingFinished()">
+                        <h2 class="card-title">Tool dispensing finished</h2>
+                        <p class="card-text">Click here when all tools that are linked to this task are placed on the AMR and send it to the workplace.</p>
+                    </a>
+                  </div>
+            </div>
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-12">
+                <div class="card text-bg-light" id="amr-arrived">
+                  <div class="card-body text-center">
+                      <a href="#" class="btn disabled" id="btn-amr-arrived" style="border: none;" @onclick="()=>HandleRobotArrived()">
+                        <h2 class="card-title">AMR arrived</h2>
+                        <p class="card-text">Click here when the AMR has arrived at the workplace.</p>
+                    </a>
+                  </div>
+            </div>
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-12">
+                <div class="card text-bg-light" id="tool-withdrawal-finished">
+                  <div class="card-body text-center">
+                      <a href="#" class="btn disabled" id="btn-tool-withdrawal-finished" style="border: none;" @onclick="()=>HandleWithdrawalFinished()">
+                        <h2 class="card-title">Tool withdrawal finished</h2>
+                        <p class="card-text">Click here when all tools are removed from the AMR. The AMR will move to the idle-position or to the tool-dispenser.</p>
+                    </a>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class = "col-6">
+        <h3>Current status</h3>
+
+        @if(MaterialList.Count > 0)
+        {
+            <h4>Material-list</h4>
+            <table class="table table-striped">
+                <thead>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                </thead>
+                <tbody>
+                    @foreach (var ml in MaterialList)
+                    {
+                        <tr>
+                            <td>@ml.First().Key</td>
+                            <td>@ml.First().Value</td>
+                        </tr>
+                    }
+                  </tbody>
+            </table>
+
+            <p>@WorkorderId</p>
+        } else if (RobotIsMovingToWorkplace == true)
+        {
+            <p>Robot is moving to workstation: @Workstation</p>
+            <p>Workstation coordinates: X = @XCoordWorkstation, Y = @YCoordWorkstation</p>
+            <p>Current robot-coordinates: X = <span id="x-coordinate">0</span>, Y = <span id="y-coordinate">0</span></p>
+            <p>Current battery-status: <span id="battery-status">0</span>%</p>
+
+        } else if (RobotHasArrived == true)
+        {
+            <p>Robot has arrived at workplace @Workstation</p>
+            <p>Withdrawal in progress ...</p>
+        } else if (WithdrawalFinished == true)
+        {
+            <p>Withdrawal finished</p>
+            <p>Robot is returning to idle-position or tool-dispenser ...</p>
+        } else
+        {
+            <p>waiting/idle</p>
+        }
+    </div>
+</div>
+
+
+<!-- Modal -->
+    <div class="modal fade" id="generalModal" tabindex="-1" aria-labelledby="generalModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="generalModalLabel">AMR - Tasks</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <table class="table table-striped">
+                  <thead>
+                      <tr>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Name</th>
+                      <th>Workstation</th>
+                      <th>Start</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                        @if (AmrTaskList != null)
+                        {
+                            @foreach (var t in AmrTaskList)
+                            {
+                                <tr>
+                                    <td>@t.Date.ToLongDateString()</td>
+                                    <td>@t.Date.TimeOfDay.ToString().Substring(0, 8)</td>
+                                    <td>@t.TaskName</td>
+                                    <td>@t.Workstation</td>
+                                    <td>@if(t.IsActive == true)
+                                        {
+                                            <button class="btn btn-info" @onclick="()=>HandleStartTask(t.Id, t.WorkstationId)" data-bs-dismiss="modal">Start task</button>
+                                        }
+                                    </td>
+                                    </tr>
+                            }
+                        }
+                  </tbody>
+            </table>
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+@code {
+    private AmrTasks[]? AmrTaskList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AmrTaskList = await TasksService.GetAmrTasksAsync(DateTime.Now);
+    }  
+
+    private string Workorder = "";
+    private string WorkorderId = "";
+    private List<Dictionary<string, string>> MaterialList = new List<Dictionary<string, string>>();
+    private string WorkstationId = "";
+    private string Workstation = "";
+    private float XCoordWorkstation = 0;
+    private float YCoordWorkstation = 0;
+    private bool RobotIsMovingToWorkplace = false;
+    private bool RobotHasArrived = false;
+    private bool WithdrawalFinished = false;
+
+    async Task HandleStartTask(string Id = "", string WorkstationId = "") // Is triggered when a task is started
+    {
+        this.WorkstationId = WorkstationId;
+        MaterialList.Clear();
+        RobotIsMovingToWorkplace = false;
+        RobotHasArrived          = false;
+        WithdrawalFinished       = false;
+
+        WorkorderId = Id;
+        var Temp = new Dictionary<string, string>(); // Materials are simulated at the moment, will be real ones in production environment
+        Temp["Insert 4"] = "2";
+        MaterialList.Add(Temp);
+
+        Temp = new Dictionary<string, string>();
+        Temp["HSS drill 7mm"] = "1";
+        MaterialList.Add(Temp);
+
+        Temp = new Dictionary<string, string>();
+        Temp["Holder 7mm"] = "1";
+        MaterialList.Add(Temp);
+
+        var Api = new ApiCalls();
+        var jsonDom = JsonSerializer.Deserialize<JsonObject>(Api.GetWorkstationById(WorkstationId))!;
+        XCoordWorkstation = (float)jsonDom["coordinates"]["value"][0]; // Get the coordinates of a workstation to show movement of the robot to it
+        YCoordWorkstation = (float)jsonDom["coordinates"]["value"][1];
+
+        Workstation = (string)jsonDom["name"]["value"];
+
+        await _jsRuntime.InvokeVoidAsync("TaskChosen");
+    }
+
+    async Task HandleDispensingFinished() // Dispensing is finished, send robot to workstation
+    {
+        MaterialList.Clear();
+        RobotHasArrived = false;
+        WithdrawalFinished = false;
+        RobotIsMovingToWorkplace = true;
+
+        await _jsRuntime.InvokeVoidAsync("DispensingFinished");
+
+        var Api = new ApiCalls();
+        var jsonDom = JsonSerializer.Deserialize<JsonObject>(Api.GetRobotById("urn:ngsi-ld:AMR:724d0f45f84d412cad8fe464da4947ed"))!; // ID hardcoded at the moment, as there is only one robot in the simulator
+
+        float XCoord = (float)jsonDom["coordinates"]["value"][0];
+        float YCoord = (float)jsonDom["coordinates"]["value"][1];
+        float Battery = 0;
+        string XOperator = XCoord < XCoordWorkstation ? "add" : "subtract";
+        string YOperator = YCoord < YCoordWorkstation ? "add" : "subtract";
+
+        do // Update robot-position until he arrives at the workstation
+        {
+            jsonDom = JsonSerializer.Deserialize<JsonObject>(Api.GetRobotById("urn:ngsi-ld:AMR:724d0f45f84d412cad8fe464da4947ed"))!;
+            Battery = (float)jsonDom["battery"]["value"];
+            XCoord = (float)jsonDom["coordinates"]["value"][0];
+            YCoord = (float)jsonDom["coordinates"]["value"][1];
+
+            await _jsRuntime.InvokeVoidAsync("UpdateCoordinates", XCoord.ToString("0.00"), YCoord.ToString("0.00"), Battery);
+            
+            Thread.Sleep(1000);
+        } while (RobotIsMovingToWorkplace == true);
+    }
+
+    async Task HandleRobotArrived() // Robot arrived at the workstation, start unloading the tools
+    {
+        MaterialList.Clear();
+        RobotHasArrived = true;
+        WithdrawalFinished = false;
+        RobotIsMovingToWorkplace = false;
+
+        await _jsRuntime.InvokeVoidAsync("AmrArrived");
+    }
+
+    async Task HandleWithdrawalFinished() // Withdrawal finished, send robot back to idle or to dispenser
+    {
+        MaterialList.Clear();
+        RobotHasArrived = false;
+        Workstation = "";
+        WithdrawalFinished = true;
+        RobotIsMovingToWorkplace = false;
+
+        await _jsRuntime.InvokeVoidAsync("WithdrawalFinished");
+    }
+}
