@@ -1,4 +1,6 @@
-﻿function TaskChosen() {
+﻿let warningDismissed = false;
+
+function TaskChosen() {
     $('#choose-and-start-task').removeClass('text-bg-primary');
     $('#choose-and-start-task').addClass('text-bg-light');
     $('#btn-choose-and-start-task').addClass('disabled');
@@ -39,9 +41,19 @@ function WithdrawalFinished() {
     $('#btn-choose-and-start-task').removeClass('disabled');
 }
 
-function UpdateCoordinates(x, y, battery) {
+function UpdateCoordinates(x, y, battery, angle) {
     $('#x-coordinate').html(x);
     $('#y-coordinate').html(y);
+    $('#view-angle').html(angle);
     $('#battery-status').html(battery);
-    //console.log(x + " - " + y + " - " + battery);
+}
+
+function ShowWarning(toolwarnings = "") {
+    if (warningDismissed == false) {
+        let toastLiveExample = document.getElementById('liveToast')
+        let toast = new bootstrap.Toast(toastLiveExample)
+        $('#tool-warning-text').html(toolwarnings);
+        toast.show();
+      //  warningDismissed = true;
+    }
 }
