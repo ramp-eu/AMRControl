@@ -57,6 +57,7 @@ These JSONs are working examples, you can change them to your needs. All of thes
 Replace {{orion_url}} with the URL of your Orion-Instance.
 
 Add a robot:
+```yaml
 {
     "version": "1.2",
     "name": "FlexMill robot",
@@ -67,6 +68,7 @@ Add a robot:
     "refDestination": "urn:ngsi-ld:Idlestation:01",
     "type": "AMR"
 }
+```
 
 Add Toolcenter:
 {
