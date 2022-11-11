@@ -71,6 +71,7 @@ Add a robot:
 ```
 
 Add Toolcenter:
+```json
 {
 "location": {
   "type": "Point",
@@ -84,6 +85,7 @@ Add Toolcenter:
     "id": "urn:ngsi-ld:Warehouse:01",
     "type": "Warehouse"
 }
+```
 
 Add Workstation 1:
 {{orion_url}}/v2/entities?options=keyValues
