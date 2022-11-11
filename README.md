@@ -57,7 +57,7 @@ These JSONs are working examples, you can change them to your needs. All of thes
 Replace {{orion_url}} with the URL of your Orion-Instance.
 
 Add a robot:
-```yaml
+```json
 {
     "version": "1.2",
     "name": "FlexMill robot",
@@ -88,6 +88,7 @@ Add Toolcenter:
 ```
 
 Add Workstation 1:
+```json
 {{orion_url}}/v2/entities?options=keyValues
 {
 "location": {
@@ -102,8 +103,10 @@ Add Workstation 1:
     "id": "urn:ngsi-ld:Workstation:1065",
     "type": "Workstation"
 }
+```
 
 Add Workstation 2:
+```json
 {{orion_url}}/v2/entities?options=keyValues
 {
 "location": {
@@ -118,10 +121,12 @@ Add Workstation 2:
  "id": "urn:ngsi-ld:Workstation:1044",
  "type": "Workstation"
 }
+```
 
 Optional: Add additional workstations if needed
 
 Add idle station, the robot is charged and parked here
+```json
 {
 "location": {
   "type": "Point",
@@ -135,9 +140,11 @@ Add idle station, the robot is charged and parked here
  "id": "urn:ngsi-ld:Idlestation:01",
  "type": "Idlestation"  
 }
+```
 
 Add one or more Workorders
-The entries in tools and components are shown to the user in the interface. These parts have to be placed on the robot
+The entries in tools and components are shown to the user in the interface. These parts have to be placed on the robot.
+```json
 {
 	"status": "scheduled",
 	"scheduledAt": "04/10/2022 08:19:30",
@@ -202,8 +209,10 @@ The entries in tools and components are shown to the user in the interface. Thes
 	"dateCreated": "04/10/2022 08:19:30",
 	"type": "WorkOrder"
 }
+```
 
 Tool-life-cycle:
+```json
 [
     {
         "id": "102630_ToolLife",
@@ -541,6 +550,7 @@ Tool-life-cycle:
         }
     }
 ]
+```
 
 # License
 [Apache](https://github.com/flexmill/AMRControl/blob/main/LICENSE) © 2022 [TCM-Systems](https://tcm-systems.eu/)
