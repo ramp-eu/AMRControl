@@ -89,7 +89,6 @@ Add Toolcenter:
 
 Add Workstation 1:
 ```json
-{{orion_url}}/v2/entities?options=keyValues
 {
 "location": {
   "type": "Point",
@@ -107,7 +106,6 @@ Add Workstation 1:
 
 Add Workstation 2:
 ```json
-{{orion_url}}/v2/entities?options=keyValues
 {
 "location": {
   "type": "Point",
