@@ -25,7 +25,7 @@ The complete industrial engineering and production process starting with a 3D mo
 # Build and install
 
 ## Option 1:
-1. Follow the instructions on [FEATS](https://github.com/Dalma-Systems/FEATS) and setup FEATS. If FEATS is not running, AMRControl will not work. Alternatively use a physical robot-installation from DALMA robotics.
+1. Follow the instructions on [FEATS](https://github.com/Dalma-Systems/FEATS) and setup FEATS. If FEATS is not running, AMRControl will not work. Alternatively use a physical robot-installation from DALMA robotics. CoFFEE from Dalma is not needed.
 2. Setup a robot, a warehouse, a toolcenter, at least one workstation, one idle-station and at least one work order (If this is not done by specific software, it can easily be done by using Postman with dalma_feats.postman_collection.json which is provided by feats). In addition you can use the JSONs below
 3. Clone the code of AMRControl to a local directory
 4. Open it in Visual Studio or any other IDE supporting C#
